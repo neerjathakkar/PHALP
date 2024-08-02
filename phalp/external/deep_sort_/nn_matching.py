@@ -100,7 +100,7 @@ def _pdist(cfg, a, b, dims, phalp_tracker):
         betas = [ 4.0536, 1.3070, 0.3792, 4.1658]; c=1
         pose_distance[pose_distance>1.5] = 1.5
     elif(cfg.phalp.distance_type=="FID_only"):
-        fid_distance = _pdist_l2(a_fid.squeeze(0), b_fid.squeeze(0))
+        fid_distance = _pdist_l2(a_fid.squeeze(1), b_fid.squeeze(1))
         return fid_distance
     else:
         raise Exception("Unknown distance type: {}".format(cfg.phalp.distance_type))
@@ -184,7 +184,6 @@ class NearestNeighborDistanceMetric(object):
             self.samples.setdefault(target, []).append([appe_feature, loca_feature, pose_feature, uv_map, face_id])
             if self.budget is not None:
                 self.samples[target] = self.samples[target][-self.budget:]
-        
         self.samples = {k: self.samples[k] for k in active_targets}
 
     def distance(self, detection_features, targets, dims=None, phalp_tracker=None):

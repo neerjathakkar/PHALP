@@ -44,5 +44,5 @@ class PHALPFaceID(PHALP):
                 crop_tensor = transforms.ToTensor()(img).to(torch.float32)
                 img_embedding = self.facenet(crop_tensor.unsqueeze(0))
             embeds.append(img_embedding) # shape 1x512
-
+        
         return embeds 
