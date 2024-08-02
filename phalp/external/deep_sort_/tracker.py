@@ -91,7 +91,7 @@ class Tracker:
             
         self.tracks = [t for t in self.tracks if not t.is_deleted()]
         active_targets = [t.track_id for t in self.tracks if t.is_confirmed() or t.is_tentative()]
-        appe_features, loca_features, pose_features, uv_maps, targets = [], [], [], [], []
+        appe_features, loca_features, pose_features, uv_maps, targets, face_ids = [], [], [], [], [], []
         for track in self.tracks:
             if not (track.is_confirmed() or track.is_tentative()): continue
                     
@@ -100,6 +100,7 @@ class Tracker:
             loca_features += [track.track_data['prediction']['loca'][-1]]
             pose_features += [track.track_data['prediction']['pose'][-1]]
             uv_maps       += [track.track_data['prediction']['uv'][-1]]
+            face_ids      += [track.track_data['prediction']['face_id'][-1]]
             targets       += [track.track_id]
             
             
@@ -114,8 +115,9 @@ class Tracker:
             loca_emb          = np.array([dets[i].detection_data['loca'] for i in detection_indices])
             pose_emb          = np.array([dets[i].detection_data['pose'] for i in detection_indices])
             uv_maps           = np.array([dets[i].detection_data['uv'] for i in detection_indices])
+            face_ids          = np.array([dets[i].detection_data['extra_data'] for i in detection_indices])
             targets           = np.array([tracks[i].track_id for i in track_indices])
-            cost_matrix       = self.metric.distance([appe_emb, loca_emb, pose_emb, uv_maps], targets, dims=[self.A_dim, self.P_dim, self.L_dim], phalp_tracker=self.phalp_tracker)
+            cost_matrix       = self.metric.distance([appe_emb, loca_emb, pose_emb, uv_maps, face_ids], targets, dims=[self.A_dim, self.P_dim, self.L_dim], phalp_tracker=self.phalp_tracker)
 
             return cost_matrix
 

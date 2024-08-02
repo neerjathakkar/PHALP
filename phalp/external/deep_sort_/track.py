@@ -55,6 +55,7 @@ class Track:
         self.track_data['prediction']['loca'] = deque([detection_data['loca']], maxlen=self.cfg.phalp.n_init+1)
         self.track_data['prediction']['pose'] = deque([detection_data['pose']], maxlen=self.cfg.phalp.n_init+1)
         self.track_data['prediction']['uv']   = deque([copy.deepcopy(detection_data['uv'])], maxlen=self.cfg.phalp.n_init+1)
+        self.track_data['prediction']['face_id']   = deque([copy.deepcopy(detection_data['extra_data'])], maxlen=self.cfg.phalp.n_init+1)
 
         # if the track is initialized by detection with annotation, then we set the track state to confirmed
         if len(detection_data['annotations'])>0:
@@ -68,10 +69,12 @@ class Track:
         appe_predicted = copy.deepcopy(appe.numpy()) if(appe is not None) else copy.deepcopy(self.track_data['history'][-1]['appe'])
         loca_predicted = copy.deepcopy(loca.numpy()) if(loca is not None) else copy.deepcopy(self.track_data['history'][-1]['loca'])
         pose_predicted = copy.deepcopy(pose.numpy()) if(pose is not None) else copy.deepcopy(self.track_data['history'][-1]['pose'])
+        face_id_predicted = copy.deepcopy(appe.numpy()) if(appe is not None) else copy.deepcopy(self.track_data['history'][-1]['extra_data'])
         
         self.track_data['prediction']['appe'].append(appe_predicted)
         self.track_data['prediction']['loca'].append(loca_predicted)
         self.track_data['prediction']['pose'].append(pose_predicted)
+        self.track_data['prediction']['face_id'].append(face_id_predicted)
 
     def update(self, detection, detection_id, shot):             
 
