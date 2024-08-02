@@ -19,19 +19,21 @@ def _pdist_l2(a, b):
     return r2
 
 def _pdist(cfg, a, b, dims, phalp_tracker):
-
-    a_appe, a_loca, a_pose, a_uv        = [], [], [], []
+    
+    a_appe, a_loca, a_pose, a_uv, a_fid        = [], [], [], [], []
     for i_ in range(len(a)):
         a_appe.append(a[i_][0]); 
         a_loca.append(a[i_][1]); 
         a_pose.append(a[i_][2]); 
-        a_uv.append(a[i_][3])
+        a_uv.append(a[i_][3]);
+        a_fid.append(a[i_][4])
 
-    b_appe, b_loca, b_pose, b_uv    = b[0], b[1], b[2], b[3]
+    b_appe, b_loca, b_pose, b_uv, b_fid    = b[0], b[1], b[2], b[3], b[4]
     a_uv, b_uv      = np.asarray(a_uv),   copy.deepcopy(np.asarray(b_uv))
     a_appe, b_appe  = np.asarray(a_appe), copy.deepcopy(np.asarray(b_appe))
     a_loca, b_loca  = np.asarray(a_loca), copy.deepcopy(np.asarray(b_loca))
     a_pose, b_pose  = np.asarray(a_pose), copy.deepcopy(np.asarray(b_pose))
+    a_fid, b_fid    = np.asarray(a_fid),  copy.deepcopy(np.asarray(b_fid))
  
     track_pose      = a_pose
     detect_pose     = b_pose
@@ -97,6 +99,9 @@ def _pdist(cfg, a, b, dims, phalp_tracker):
     elif(cfg.phalp.distance_type=="EQ_019"):
         betas = [ 4.0536, 1.3070, 0.3792, 4.1658]; c=1
         pose_distance[pose_distance>1.5] = 1.5
+    elif(cfg.phalp.distance_type=="FID_only"):
+        fid_distance = _pdist_l2(a_fid.squeeze(0), b_fid.squeeze(0))
+        return fid_distance
     else:
         raise Exception("Unknown distance type: {}".format(cfg.phalp.distance_type))
     
@@ -162,7 +167,7 @@ class NearestNeighborDistanceMetric(object):
         self.samples            = {}
         
         
-    def partial_fit(self, appe_features, loca_features, pose_features, uv_maps, targets, active_targets):
+    def partial_fit(self, appe_features, loca_features, pose_features, uv_maps, face_ids, targets, active_targets):
         """Update the distance metric with new data.
 
         Parameters
@@ -175,8 +180,8 @@ class NearestNeighborDistanceMetric(object):
             A list of targets that are currently present in the scene.
 
         """
-        for appe_feature, loca_feature, pose_feature, uv_map, target in zip(appe_features, loca_features, pose_features, uv_maps, targets):
-            self.samples.setdefault(target, []).append([appe_feature, loca_feature, pose_feature, uv_map])
+        for appe_feature, loca_feature, pose_feature, uv_map, face_id, target in zip(appe_features, loca_features, pose_features, uv_maps, face_ids, targets):
+            self.samples.setdefault(target, []).append([appe_feature, loca_feature, pose_feature, uv_map, face_id])
             if self.budget is not None:
                 self.samples[target] = self.samples[target][-self.budget:]
         

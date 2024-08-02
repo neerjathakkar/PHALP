@@ -104,7 +104,7 @@ class Tracker:
             targets       += [track.track_id]
             
             
-        self.metric.partial_fit(np.asarray(appe_features), np.asarray(loca_features), np.asarray(pose_features), np.asarray(uv_maps), np.asarray(targets), active_targets)
+        self.metric.partial_fit(np.asarray(appe_features), np.asarray(loca_features), np.asarray(pose_features), np.asarray(uv_maps), np.asarray(face_ids), np.asarray(targets), active_targets)
         
         return matches
         
