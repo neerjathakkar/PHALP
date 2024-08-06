@@ -10,7 +10,7 @@ from torchvision import transforms
 import torch
 import os
 import pickle
-
+import cv2
 
 class PHALPFaceID(PHALP):
 
@@ -38,13 +38,11 @@ class PHALPFaceID(PHALP):
         crops = []
         for box in pred_bbox:
             y_min, x_min, y_max, x_max = map(int, [box[0], box[1], box[2], box[3]])
-
-            height, width, _ = image_frame.shape
+            width, height, _ = image_frame.shape
             y_min = max(0, y_min)
             x_min = max(0, x_min)
             y_max = min(height, y_max)
             x_max = min(width, x_max)
-
             crop = image_frame[x_min:x_max, y_min:y_max]
             crops.append(crop)
 
@@ -54,27 +52,21 @@ class PHALPFaceID(PHALP):
             try:
                 img = Image.fromarray(crop)
             except:
-                # save image
-                import cv2
-                cv2.imwrite("error_image.jpg", image_frame)
-                # import ipdb; ipdb.set_trace()
+                print("error! writing image")
+                cv2.imwrite(f"error_image_{frame_name}.jpg", image_frame)
                 img = Image.fromarray(image_frame)
-            # import ipdb; ipdb.set_trace()
             mtcnn_out, conf = self.mtcnn(img, return_prob=True)
-            print(conf)
 
             if conf is not None:
                 confs.append(conf)
             else:
                 confs.append(0)
             if mtcnn_out is not None:
-                print("MTCNN worked")
-                # import ipdb; ipdb.set_trace()
                 img_embedding = self.facenet(mtcnn_out.unsqueeze(0))
             else:
-                print("MTCNN did not work")
-                crop_tensor = transforms.ToTensor()(img).to(torch.float32)
-                img_embedding = self.facenet(crop_tensor.unsqueeze(0))
+                # if face detector fails, set embedding to zeros
+                # crop_tensor = transforms.ToTensor()(img).to(torch.float32)
+                img_embedding = torch.zeros(1, 512)
             embeds.append(img_embedding) # shape 1x512
 
             if self.save_embeddings:
@@ -85,16 +77,13 @@ class PHALPFaceID(PHALP):
                 with open(os.path.join(self.log_dir, frame_name + '_img.pkl'), 'wb') as f:
                     if mtcnn_out is not None:
                         # undo normalization
-                        # import ipdb; ipdb.set_trace()
                         mtcnn_out = mtcnn_out * 128 + 127.5
                         img = mtcnn_out.permute(1, 2, 0).detach().cpu().numpy()
                         pickle.dump(img, f)
                         # save image 
-                        import cv2
                         cv2.imwrite(os.path.join(self.log_dir, frame_name + '.jpg'), img)
                     else:
                         pickle.dump(crop, f)
-                        import cv2 
                         cv2.imwrite(os.path.join(self.log_dir, frame_name + '.jpg'), crop)
         
         # return embeds, confs 
