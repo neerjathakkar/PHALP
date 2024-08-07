@@ -102,6 +102,21 @@ def _pdist(cfg, a, b, dims, phalp_tracker):
     elif(cfg.phalp.distance_type=="FID_only"):
         fid_distance = _pdist_l2(a_fid.squeeze(1), b_fid.squeeze(1))
         return fid_distance
+    elif(cfg.phalp.distance_type=="EQ_019_fid"):
+        betas = [ 4.0536, 1.3070, 0.3792, 4.1658]; c=1
+        pose_distance[pose_distance>1.5] = 1.5
+        detection_failed = False
+        # import ipdb; ipdb.set_trace()
+        for i in range(b_fid.shape[0]):
+            if np.all(b_fid[i, :, :] == 0):
+                detection_failed = True
+        if not detection_failed:
+            # import ipdb; ipdb.set_trace()
+            # already normalized
+            fid_distance = _pdist_l2(a_fid.squeeze(1), b_fid.squeeze(1))
+            r_texture = (r_texture + fid_distance) / 2
+                
+            
     else:
         raise Exception("Unknown distance type: {}".format(cfg.phalp.distance_type))
     

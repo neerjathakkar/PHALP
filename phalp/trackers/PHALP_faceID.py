@@ -17,6 +17,7 @@ class PHALPFaceID(PHALP):
     def __init__(self, cfg):
         super(PHALPFaceID, self).__init__(cfg)
 
+        # self.mtcnn = MTCNN(image_size=224, margin=40, select_largest=True, thresholds=[0.5, 0.6, 0.6])
         self.mtcnn = MTCNN(image_size=224, margin=40, select_largest=True)
         self.facenet = InceptionResnetV1(pretrained='vggface2', classify=False, num_classes=None).eval()
 
@@ -51,11 +52,14 @@ class PHALPFaceID(PHALP):
         for crop in crops:
             try:
                 img = Image.fromarray(crop)
+                mtcnn_out, conf = self.mtcnn(img, return_prob=True)
             except:
-                print("error! writing image")
+                print("error! writing or detecting image")
                 cv2.imwrite(f"error_image_{frame_name}.jpg", image_frame)
                 img = Image.fromarray(image_frame)
-            mtcnn_out, conf = self.mtcnn(img, return_prob=True)
+                mtcnn_out = None 
+                conf = None
+            
 
             if conf is not None:
                 confs.append(conf)
@@ -66,6 +70,7 @@ class PHALPFaceID(PHALP):
             else:
                 # if face detector fails, set embedding to zeros
                 # crop_tensor = transforms.ToTensor()(img).to(torch.float32)
+                print("face detector failed")
                 img_embedding = torch.zeros(1, 512)
             embeds.append(img_embedding) # shape 1x512
 
